@@ -1,0 +1,1 @@
+Lembrando que para o Selenium tive que instalar o chrome-driver e direcionar a variavel de ambiente pelo caminho
