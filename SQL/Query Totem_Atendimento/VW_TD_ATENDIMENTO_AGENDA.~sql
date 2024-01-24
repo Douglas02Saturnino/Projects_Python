@@ -1,0 +1,132 @@
+/**********************************************************************************************************************************************************
+ Autor..............: Douglas Alexander Saturnino
+ Data...............: 28/09/2023
+ Funcionalidade.....: View vinculada a projeto de Totem de atendimento.
+**********************************************************************************************************************************************************/  
+
+CREATE OR REPLACE VIEW VW_TD_ATENDIMENTO_AGENDA AS
+SELECT it_agenda_central.cd_it_agenda_central
+      ,it_agenda_central.cd_agenda_central
+      ,(SELECT nm_prestador
+          FROM prestador
+         WHERE cd_prestador = agenda_central.cd_prestador) Medico
+      ,agenda_central.cd_recurso_central
+      ,it_agenda_central.hr_agenda
+      ,to_char(it_agenda_central.hr_agenda, 'dd/mm/yyyy') DATA
+      ,to_char(it_agenda_central.hr_agenda, 'hh24:mi:ss') HORA
+      ,it_agenda_central.cd_paciente
+      ,it_agenda_central.nm_paciente
+      ,to_char(it_agenda_central.dt_nascimento, 'dd/mm/yyyy') dt_nascimento
+      ,it_agenda_central.cd_item_agendamento
+      ,item_agendamento.cd_exa_rx
+      ,exa_rx.exa_rx_cd_pro_fat
+      ,exa_rx.ds_exa_rx
+      ,it_agenda_central.cd_convenio
+      ,it_agenda_central.cd_con_pla
+      ,nvl(it_agenda_central.cd_ser_dis, 30) cd_ser_dis
+      ,nvl(it_agenda_central.cd_tip_mar, 34) cd_tip_mar
+      ,it_agenda_central.ds_email
+      ,agenda_central.cd_prestador
+      ,agenda_central.cd_multi_empresa
+      ,agenda_central.cd_unidade_atendimento
+      ,'PAEU' sistema
+      ,'E' tp_atendimento
+      ,'N' sn_apac
+      ,5 ori_ate
+      ,5 loc_proced
+      ,40 tp_internacao
+      ,(SELECT nr_carteira
+          FROM atendime
+         WHERE cd_atendimento =
+               (SELECT max(cd_atendimento)
+                  FROM atendime
+                 WHERE cd_paciente = it_agenda_central.cd_paciente
+                   AND cd_convenio = it_agenda_central.cd_convenio
+                   AND cd_con_pla = it_agenda_central.cd_con_pla)) nr_carteira_ultimo_atendimento
+      ,paciente.nr_cpf
+      ,paciente.tp_sexo
+      ,agenda_central.cd_setor
+
+      ,(SELECT cd_triagem_atendimento
+          FROM triagem_atendimento
+         WHERE cd_atendimento =
+               (SELECT max(cd_atendimento)
+                  FROM atendime
+                 WHERE cd_paciente = it_agenda_central.cd_paciente
+                   AND cd_convenio = it_agenda_central.cd_convenio
+                   AND cd_con_pla = it_agenda_central.cd_con_pla)) cd_triagem_atendimento
+      ,(SELECT ds_senha
+          FROM triagem_atendimento
+         WHERE cd_atendimento =
+               (SELECT max(cd_atendimento)
+                  FROM atendime
+                 WHERE cd_paciente = it_agenda_central.cd_paciente
+                   AND cd_convenio = it_agenda_central.cd_convenio
+                   AND cd_con_pla = it_agenda_central.cd_con_pla)) ds_senha
+      ,(SELECT dt_validade
+          FROM carteira
+         WHERE NR_CARTEIRA =
+               (SELECT nr_carteira
+                  FROM atendime
+                 WHERE cd_atendimento =
+                       (SELECT max(cd_atendimento)
+                          FROM atendime
+                         WHERE cd_paciente = it_agenda_central.cd_paciente
+                           AND cd_convenio = it_agenda_central.cd_convenio
+                           AND cd_con_pla = it_agenda_central.cd_con_pla))) dt_validade
+  FROM it_agenda_central
+  JOIN agenda_central on it_agenda_central.cd_agenda_central = agenda_central.cd_agenda_central
+  JOIN item_agendamento ON it_agenda_central.cd_item_agendamento = item_agendamento.cd_item_agendamento
+  JOIN paciente ON it_agenda_central.cd_paciente = paciente.cd_paciente 
+  JOIN exa_rx ON exa_rx.cd_exa_rx = item_agendamento.cd_exa_rx 
+   AND it_agenda_central.cd_agenda_central =
+       agenda_central.cd_agenda_central
+  JOIN esp_med ON agenda_central.cd_prestador = esp_med.cd_prestador
+ WHERE TRUNC(it_agenda_central.hr_agenda) = trunc(sysdate)
+   AND it_agenda_central.nm_paciente is not null
+   AND esp_med.sn_especial_principal = 'S'
+   AND agenda_central.tp_agenda = 'I'
+ GROUP BY it_agenda_central.cd_it_agenda_central
+         ,it_agenda_central.cd_agenda_central
+         ,agenda_central.cd_recurso_central
+         ,it_agenda_central.hr_agenda
+         ,it_agenda_central.cd_paciente
+         ,it_agenda_central.nm_paciente
+         ,it_agenda_central.dt_nascimento
+         ,it_agenda_central.cd_item_agendamento
+         ,item_agendamento.cd_exa_rx
+         ,exa_rx.exa_rx_cd_pro_fat
+         ,exa_rx.ds_exa_rx
+         ,it_agenda_central.cd_convenio
+         ,it_agenda_central.cd_con_pla
+         ,it_agenda_central.cd_ser_dis
+         ,it_agenda_central.cd_tip_mar
+         ,it_agenda_central.ds_email
+         ,agenda_central.cd_prestador
+         ,agenda_central.cd_multi_empresa
+         ,agenda_central.cd_unidade_atendimento
+         ,paciente.nr_cpf
+         ,paciente.tp_sexo
+         ,agenda_central.cd_setor;
+
+
+
+
+/**********************************************************************************************************************************************************
+ Autor..............: Douglas Alexander Saturnino
+ Data...............: 28/09/2023
+ Funcionalidade.....: Sequences vinculada a projeto de Totem de atendimento.
+**********************************************************************************************************************************************************/  
+
+CREATE SEQUENCE seq_ped_rx
+ MINVALUE 1
+ START WITH 1
+ INCREMENT BY 1
+ CACHE 20; 
+ 
+ 
+CREATE SEQUENCE seq_itped_rx
+ MINVALUE 1
+ START WITH 1
+ INCREMENT BY 1
+ CACHE 20; 
